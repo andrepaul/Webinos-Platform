@@ -21,17 +21,19 @@ var fs = require("fs"),
 
 var options = {};
 var pzpInstance;
-var pzp   = require("./webinos/pzp/lib/pzp");
+var pzp   = require("./webinos/core/pzp/lib/pzp");
+__EnablePolicyEditor = false;
 
 function help() {
   console.log("Usage: webinos_pzp [options]");
   console.log("Options:");
   console.log("--pzh-host=[ipaddress]   host of the pzh (default localhost)");
   console.log("--pzh-name=[name]        name of the pzh (default \"\")");
-  console.log("--pzp-name=[name]        name of the pzp (default \"\")");
+  console.log("--friendly-name=[name]   name of the pzp (default \"\")");
   console.log("--auth-code=[code]       context debug flag (default DEBUG)");
   console.log("--preference=[option]    preference option (default hub, other option peer)");
   console.log("--widgetServer           start widget server");
+  console.log("--policyEditor           start policy editor server");
   process.exit();
 }
 
@@ -54,7 +56,7 @@ process.argv.forEach(function (arg) {
         options.preference = parts[1];
         break;
       case "--auth-code":
-        options.code = parts[1]+"="; // added as last letter in qrcode is = but above "split" removes this info
+        options.code = parts[1];
         break;
       default:
         console.log("unknown option: " + parts[0]);
@@ -68,6 +70,9 @@ process.argv.forEach(function (arg) {
           break;
         case "--widgetServer":
           options.startWidgetServer = true;
+          break;
+        case "--policyEditor":
+          __EnablePolicyEditor = true;
           break;
       }
     }
@@ -150,7 +155,7 @@ fs.readFile(path.join(__dirname, "config-pzp.json"), function(err, data) {
 
 function initializeWidgetServer() {
   // Widget manager server
-  var wrt = require("./webinos/common/manager/widget_manager/lib/ui/widgetServer");
+  var wrt = require("./webinos/core/manager/widget_manager/lib/ui/widgetServer");
   if (typeof wrt !== "undefined") {
     // Attempt to start the widget server.
     wrt.start(function (msg, wrtPort) {
@@ -158,16 +163,16 @@ function initializeWidgetServer() {
         // Write the websocket and widget server ports to file so the renderer can pick them up.
         var wrtConfig = {};
         wrtConfig.runtimeWebServerPort = wrtPort;
-        wrtConfig.pzpWebSocketPort = session.configuration.port.pzp_webSocket;
-        fs.writeFile((pzp.session.getWebinosPath()+'/wrt/webinos_runtime.json'), JSON.stringify(wrtConfig, null, ' '), function (err) {
+        wrtConfig.pzpWebSocketPort = pzp.session.getWebinosPorts().pzp_webSocket;
+        fs.writeFile((path.join(pzp.session.getWebinosPath(),'../wrt/webinos_runtime.json')), JSON.stringify(wrtConfig, null, ' '), function (err) {
           if (err) {
-            log.error('error saving runtime configuration file: ' + err);
+            console.log('error saving runtime configuration file: ' + err);
           } else {
-            log.info('saved configuration runtime file');
+            console.log('saved configuration runtime file');
           }
         });
       } else {
-            log.error('error starting wrt server: ' + msg);
+            console.log('error starting wrt server: ' + msg);
       }
     });
   }
