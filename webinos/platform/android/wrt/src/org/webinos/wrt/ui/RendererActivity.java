@@ -73,6 +73,23 @@ public class RendererActivity extends Activity implements WrtManager.LaunchListe
 			}
 		}
 		instanceId = inst;
+		
+		String query = getIntent().getStringExtra("query");
+		
+		webView.loadUrl("javascript:Widget = {};");
+		webView.loadUrl("javascript:Widget.args = {};");
+		if (query != null && query.length() != 0){
+			String execJS = "";
+			String[] parts = query.split("&");
+			String[] aPair;
+			String key = "";
+			String value = "";
+			for (int i = 0; i < parts.length; i ++){
+				aPair = parts[i].split("=");
+				if (aPair.length == 1) webView.loadUrl("javascript:Widget.args." + aPair[0] + " = '';");
+				if (aPair.length > 1) webView.loadUrl("javascript:Widget.args." + aPair[0] + " = '" + aPair[1] + "';");
+			}
+		}
 
 		webView = (WebView) findViewById(R.id.webview);
 		webView.setWebViewClient(new WebViewClient(this));

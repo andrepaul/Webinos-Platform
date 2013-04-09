@@ -95,7 +95,15 @@ public class AppLauncherManagerImpl extends AppLauncherManager implements
 				wrtIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 				// todo: interface the widget manager instead of generating hash
 				// manually
-				wrtIntent.putExtra("id", SHAsum(app.getBytes()));
+				
+				String[] parts = app.split("?");
+				String appID = app;
+				String query = "";
+				if (parts.length >= 1) appID = parts[0];
+				if (parts.length >= 2) query = parts[1];
+				
+				wrtIntent.putExtra("id", SHAsum(appID.getBytes()));
+				if (query.length() != 0) wrtIntent.putExtra("query", query); 
 				androidContext.startActivity(wrtIntent);
 				successCallback.handleEvent("");
 			} catch (Exception e) {
